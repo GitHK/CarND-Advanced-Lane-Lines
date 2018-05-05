@@ -69,7 +69,7 @@ def video_pipe(video_name):
 def main():
     images_pipe(TEST_IMAGES_DIR)
     video_pipe('project_video.mp4')
-    video_pipe('challenge_video.mp4')
+    #video_pipe('challenge_video.mp4')  # disabled, error on this video
     video_pipe('harder_challenge_video.mp4')
 
 
