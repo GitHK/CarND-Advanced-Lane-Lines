@@ -78,15 +78,25 @@ class HSV(Enum):
     V = 2
 
 
+def get_hls_image(image):
+    """ Converts image to HLS """
+    return cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+
+
 def get_hls_channel(image, channel):
     """ Converts an image to HLS and extracts a single channel """
-    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    hls = get_hls_image(image)
     return hls[:, :, channel.value]
+
+
+def get_hsv_image(image):
+    """ Converts image to HSV """
+    return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
 
 def get_hsv_channel(image, channel):
     """ Converts an image to HLS and extracts a single channel """
-    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    hsv = get_hsv_image(image)
     return hsv[:, :, channel.value]
 
 
@@ -115,16 +125,16 @@ def inverse_binarization(channel):
 def combined_binarization(image, is_debug=True):
     """ Split image into channels and apply a combination of techniques """
 
-    rgb_r = get_rgb_channel(image, RGB.R)
-    rgb_g = get_rgb_channel(image, RGB.G)
-    rgb_b = get_rgb_channel(image, RGB.B)
+    # rgb_r = get_rgb_channel(image, RGB.R)
+    # rgb_g = get_rgb_channel(image, RGB.G)
+    # rgb_b = get_rgb_channel(image, RGB.B)
 
-    hls_h = get_hls_channel(image, HLS.H)
-    hls_l = get_hls_channel(image, HLS.L)
+    # hls_h = get_hls_channel(image, HLS.H)
+    # hls_l = get_hls_channel(image, HLS.L)
     hls_s = get_hls_channel(image, HLS.S)
 
-    hsv_h = get_hsv_channel(image, HSV.H)
-    hsv_s = get_hsv_channel(image, HSV.S)
+    # hsv_h = get_hsv_channel(image, HSV.H)
+    # hsv_s = get_hsv_channel(image, HSV.S)
     hsv_v = get_hsv_channel(image, HSV.V)
 
     # TODO ~V from HSV chennel seems to do a good job
@@ -163,7 +173,6 @@ def combined_binarization(image, is_debug=True):
     # mag_thresh_hls_s = mag_thresh(hls_s, mag_thresh=(50, 100))                              # except test 5 it looks ok
     # dir_thresh_hls_s = dir_threshold(hls_s, dir_thresh=(-np.pi / 4, np.pi / 4))
 
-
     # HSV BLOCK
     # abs_sobel_x_hsv_h = abs_sobel_thresh(hsv_h, is_x_direction=True, thresh=(10, 250))                     # no
     # abs_sobel_y_hsv_h = inverse_binarization(abs_sobel_thresh(hsv_h, is_x_direction=False, thresh=(1, 100)))   # bno
@@ -176,14 +185,16 @@ def combined_binarization(image, is_debug=True):
     # dir_thresh_hsv_s = dir_threshold(hsv_s, dir_thresh=(-np.pi / 4, np.pi / 4))
     #
     #
-    # abs_sobel_x_hsv_v = abs_sobel_thresh(hsv_v, is_x_direction=True, thresh=(20, 200))      # no
+    # TODO: this helps with shadows and yellow lines where there is a lot of nise, some filtering of this channel could do wonders
+    abs_sobel_x_hsv_v = abs_sobel_thresh(hsv_v, is_x_direction=True, thresh=(20, 200))  # no
     # abs_sobel_y_hsv_v = abs_sobel_thresh(hsv_v, is_x_direction=False, thresh=(10, 100))     #no
     # mag_thresh_hsv_v = mag_thresh(hsv_v, mag_thresh=(10, 100))  #no
     # dir_thresh_hsv_v = dir_threshold(hsv_v, dir_thresh=(-np.pi / 4, np.pi / 4))
 
 
     combined = np.zeros_like(abs_sobel_x_hls_s)
-    combined[(abs_sobel_x_hls_s == 1) | (thresh_hsv_v == 1)] = 1
+    combined[(abs_sobel_x_hls_s == 1) | (thresh_hsv_v == 1) | (abs_sobel_x_hsv_v == 1)] = 1
+    # Other candidates which soldved the problem | (abs_sobel_x_rgb_g == 1) | (abs_sobel_x_rgb_b == 1)
 
     # combined = abs_sobel_x_hls_s
 

@@ -36,12 +36,12 @@ class LaneInfo:
 
 
 def full_line_search(wraped_binarized, ym_per_pix=30 / 720, xm_per_pix=3.7 / 700, with_debug_image=True):
-    TOTAL_VERTICAL_STRIDES = 10
+    TOTAL_VERTICAL_STRIDES = 9
     # Set minimum number of pixels found to recenter window
     MIN_PIXELS_TO_RECENTER = 10
     DRAWN_CURVE_LINE_WIDTH = 4  # width of final curve in pixels
 
-    scan_window_width = int(wraped_binarized.shape[1] * 0.10)
+    scan_window_width = int(wraped_binarized.shape[1] * 0.13)
     half_scam_window_width = int(scan_window_width / 2)
     scan_window_height = int(wraped_binarized.shape[0] / TOTAL_VERTICAL_STRIDES)
 
@@ -51,7 +51,11 @@ def full_line_search(wraped_binarized, ym_per_pix=30 / 720, xm_per_pix=3.7 / 700
         logger.info("Search params (strides, window width, window height): (%s, %s, %s)" % (
             TOTAL_VERTICAL_STRIDES, scan_window_width, scan_window_height))
 
-    histogram = np.sum(wraped_binarized[wraped_binarized.shape[0] // 2:, :], axis=0)
+    histogram = np.sum(wraped_binarized[wraped_binarized.shape[0] // 2 + 100:, :], axis=0)
+    # Used only for debug
+    # from matplotlib import pyplot as plt
+    # plt.plot(histogram)
+    # plt.show()
 
     midpoint = np.int(histogram.shape[0] // 2)
     left_search_base = np.argmax(histogram[:midpoint])
@@ -298,7 +302,7 @@ def curvatures_in_meters(left_x, left_y, ploty, right_x, right_y, xm_per_pix, ym
 
 def compute_curvature(ploty, fit, ym_per_pix):
     """ Conputes the curvature of a line """
-    y_eval_m = np.max(ploty) * ym_per_pix   # in meters
+    y_eval_m = np.max(ploty) * ym_per_pix  # in meters
     return ((1 + (2 * fit[0] * y_eval_m + fit[1]) ** 2) ** 1.5) / np.absolute(2 * fit[0])
 
 
@@ -326,11 +330,13 @@ def can_use_this_frame(current_lane, previous_lane):
     Sanity checking, if this frame can be used.
 
     Checking that they have similar curvature
+    Checking that the current lane is not too small
     Checking that they are separated by approximately the right distance horizontally
     Checking that they are roughly parallel
     """
 
     SIMILAR_CURVATURE_THRESHOLD = 1000  # in meters almost 2 km in average
+    MIN_LANE_LENGTH = 2 # in meters, while it may not be the min length it ensures lanes not collapsing on top of each other
     SIMILAR_LANE_DISTANCE_THRESHOLD = 0.3  # in meters
     ROUGHLY_PARALLEL_THRESHOLD = 0.0001
 
@@ -340,30 +346,22 @@ def can_use_this_frame(current_lane, previous_lane):
 
     curvature_ok = left_curv_diff <= SIMILAR_CURVATURE_THRESHOLD and right_curv_diff <= SIMILAR_CURVATURE_THRESHOLD
 
-    # print('curvature ok', curvature_ok)
+    # Checking that the current lane is not too small
+    length_ok = current_lane.lane_width > MIN_LANE_LENGTH
 
     # Checking that they are separated by approximately the right distance horizontally
-
     lane_width_diff = np.abs(current_lane.lane_width - previous_lane.lane_width)
     distance_ok = lane_width_diff <= SIMILAR_LANE_DISTANCE_THRESHOLD
 
-    # print('distance ok', distance_ok)
-
     # Checking that they are roughly parallel
-
     current_left_directrix, current_right_directrix = lane_lines_directixes(current_lane)
-
     current_directrix_diff = np.abs(current_left_directrix - current_right_directrix)
-
-    # print("%.10f" %current_directrix_diff)
-
     current_directrix_ok = current_directrix_diff <= ROUGHLY_PARALLEL_THRESHOLD
-    # print('average parallelism ', left_tan_ok, right_tan_ok)
 
-    return curvature_ok and distance_ok and current_directrix_ok
+    return curvature_ok and distance_ok and current_directrix_ok and length_ok
 
 
-MAX_FRAMES_TO_SKIP_BEFORE_RESET = 3
+MAX_FRAMES_TO_SKIP_BEFORE_RESET = 20
 skipped_frames_counter = 0
 
 
@@ -406,7 +404,7 @@ def detect_on_video_frame(wraped_binarized, with_debug_image):
             last_valid_lanes.append(current_lane)
 
     if current_lane is None:
-        print('Something bad happend, but why!?')
+        print('Something bad happened, but why!?')
         print(detected_debug)
         print(current_lane)
 
@@ -451,7 +449,7 @@ def average_curves_and_get_lane(wraped_binarized, left_fit, right_fit, min_left_
     right_x = np.array([eval_poly_2(right_fit, y) for y in right_y], dtype=np.int)
 
     if len(left_x) == 0 or len(left_y) == 0:
-        print('WTF happend?')
+        print('What happend?')
         print(min_left_y, max_left_y, left_fit)
         print(min_right_y, max_right_y, right_fit)
         print(left_y)

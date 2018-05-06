@@ -4,10 +4,10 @@ import os
 import cv2
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from code.constants import TEST_IMAGES_DIR, OUTPUT_IMAGES_DIR
+from code.constants import OUTPUT_IMAGES_DIR
 from code.pipeline import process_raw, set_debug_mode_options, reset_pipeline
 from code.utils import files_in_directory, get_module_directory, create_directory_if_missing, \
-    add_suffix_before_extension
+    add_suffix_before_extension, fetch_image_at_time
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -67,10 +67,13 @@ def video_pipe(video_name):
 
 
 def main():
-    images_pipe(TEST_IMAGES_DIR)
+    # images_pipe(TEST_IMAGES_DIR)
     video_pipe('project_video.mp4')
-    #video_pipe('challenge_video.mp4')  # disabled, error on this video
+    video_pipe('challenge_video.mp4')  # disabled, error on this video
     video_pipe('harder_challenge_video.mp4')
+
+    # Extract frames to enhance the piepline
+    #fetch_image_at_time('project_video.mp4', time_ms=41500)
 
 
 if __name__ == '__main__':

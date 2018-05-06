@@ -4,6 +4,8 @@ import pickle
 import cv2
 import matplotlib.pyplot as plt
 
+from code.constants import TEST_IMAGES_DIR
+
 
 def show_image(image, window_title=None):
     """ Provide an image and creates a new figure and plots color or greyscale images """
@@ -43,6 +45,7 @@ def save_images_with_title(img1, img2, title1, title2, full_out_path):
 def bgr_to_rgb(image):
     """ Convert OpenCV read image to RGB """
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
 
 def binary_image_to_gray(image):
     """ Used to convert a binarized image to gray scale """
@@ -110,3 +113,15 @@ def add_suffix_before_extension(file_name_with_extension, prefix):
     """ Adds provided suffix before extension to file name """
     file_name, extension = file_name_with_extension.split('.')
     return "%s_%s.%s" % (file_name, prefix, extension)
+
+
+def fetch_image_at_time(video_name, time_ms):
+    in_video_path = os.path.join(get_module_directory(), '..', video_name)
+    vidcap = cv2.VideoCapture(in_video_path)
+    vidcap.set(cv2.CAP_PROP_POS_MSEC, time_ms)  # just cue to 20 sec. position
+    success, image = vidcap.read()
+    if success:
+        source_image_dir = os.path.join(get_module_directory(), '..', TEST_IMAGES_DIR)
+        frame_name = "%s_%s.jpg" % (video_name.replace('.mp4', ''), time_ms)
+        out_path = os.path.join(source_image_dir, frame_name)
+        cv2.imwrite(out_path, image)  # save frame as JPEG file
