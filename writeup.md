@@ -100,12 +100,15 @@ The code for this part can be found inside the file `code\binarize.py`.
 
 I used a combination between:
 
-- the absolute sobel in the X direction
-applied to the S channel after converting the image to HLS
+- the absolute sobel in the X direction applied to the S channel after
+converting the image to HLS.
 - the V channel after converting the image to HSV.
+- the absolute sobel in the X direction applied to the V channel after
+converting the image to HSV. (**added from the previous iteration of
+this project, fixes most problems with lane detection**)
 
 These combination (**bitwise or** between binary images) contained the
-information needed to correclty identify lane lines.
+information needed to correctly identify lane lines.
 
 As observed inside the function `combined_binarization` most
 combinations were explored.
@@ -256,7 +259,11 @@ a look at all files ending with **`_final.jpg`**.
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-[Link to result of **project_video.mp4**](./output_images/project_video.mp4)
+List of videos:
+
+1. [**project_video.mp4**](./output_images/project_video.mp4)
+2. [**challenge_video.mp4**](./output_images/challenge_video.mp4)
+3. [**harder_challenge_video.mp4**](./output_images/harder_challenge_video.mp4)
 
 ---
 
@@ -264,21 +271,29 @@ a look at all files ending with **`_final.jpg`**.
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-The pipeline is not able to process the `challenge_video.mp4` due to an
-issue with fitting a polyline with 0 data points in the x array. The
-pipeline must be extended to detect and skip this kind of problem
-causing frames.
+The first video should now address all the points in the assignment.
 
-The pipeline behaves bad when processing the `harder_challenge_video.mp4`
-video, have a look at: [harder_challenge_video output](./output_images/harder_challenge_video.mp4)
-A better binarization technique could provide better results.
+In the first iteration of this project, the pipeline was not able to
+process the `challenge_video.mp4` due to an issue with fitting a
+polyline with 0 data points in the x array. This issue is no longer
+present as the binary image contains more data points.
 
-In general, if light and or the color of the asphalt change suddenly,
-problems appear. I think that the selected channels are not good enough.
-While they may work well of the first video they do really bad on the
-challenge videos (second and third).
+Performance on the third video remains bad (it is better then before).
+The issue with the lane collapsing to 0 width was fixed by adding a
+new sanity check parameter (minimum lane length). The same check could
+also be implemented for the lane with at the top of the lane not only
+in proximity to the car, this would avoid the top of the lane lines
+touching.
+
+Problems when the light and/or the color of the asphalt would change
+suddenly have been resolved. The introduction of new data during the
+binarization process avoids this issue.
 
 To make the pipeline more robust and obtain better results, data frames
-should be extracted from where the pipeline catastrophically fails.
-As stated above a better image binarization, would also improve results
-in this situation.
+should be extracted from where the pipeline catastrophically fails. This
+was partially addressed in the last version.
+
+The pipeline is not as reactive as it should be, it tends to stick to
+old data. Still more tuning is required. Also frames form the second
+and third videos should also be used to detect and correct undesired
+behaviours.
