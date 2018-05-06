@@ -291,15 +291,15 @@ def curvatures_in_meters(left_x, left_y, ploty, right_x, right_y, xm_per_pix, ym
     """ Returns the curvature in meters for the left and right lanes """
     left_fit_cr = np.polyfit(left_y * ym_per_pix, left_x * xm_per_pix, 2)
     right_fit_cr = np.polyfit(right_y * ym_per_pix, right_x * xm_per_pix, 2)
-    left_curverad_m = compute_curvature(ploty, left_fit_cr)
-    right_curverad_m = compute_curvature(ploty, right_fit_cr)
+    left_curverad_m = compute_curvature(ploty, left_fit_cr, ym_per_pix)
+    right_curverad_m = compute_curvature(ploty, right_fit_cr, ym_per_pix)
     return left_curverad_m, right_curverad_m
 
 
-def compute_curvature(ploty, fit):
+def compute_curvature(ploty, fit, ym_per_pix):
     """ Conputes the curvature of a line """
-    y_eval = np.max(ploty)
-    return ((1 + (2 * fit[0] * y_eval + fit[1]) ** 2) ** 1.5) / np.absolute(2 * fit[0])
+    y_eval_m = np.max(ploty) * ym_per_pix   # in meters
+    return ((1 + (2 * fit[0] * y_eval_m + fit[1]) ** 2) ** 1.5) / np.absolute(2 * fit[0])
 
 
 def compute_midpoint(left_fitx, right_fitx):
